@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("result").innerHTML = "Loading model...";
 
   try {
-    tokenizer = await window.transformers.AutoTokenizer.from_pretrained('Xenova/bert-base-uncased');
-    model = await window.transformers.AutoModelForMaskedLM.from_pretrained('Xenova/bert-base-uncased');
+    tokenizer = await window.transformers.AutoTokenizer.from_pretrained('Xenova/distilbert-base-uncased');
+    model = await window.transformers.AutoModelForMaskedLM.from_pretrained('Xenova/distilbert-base-uncased');
     console.log("Model and tokenizer loaded.");
     button.disabled = false;
     document.getElementById("result").innerHTML = "Model ready. Type and click 'Correct'.";
