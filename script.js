@@ -1,3 +1,4 @@
+// QWERTY keyboard neighbors
 const neighbors = {
   a: ['q', 'w', 's', 'z'], b: ['v', 'g', 'h', 'n'], c: ['x', 'd', 'f', 'v'],
   d: ['s', 'e', 'r', 'f', 'x', 'c'], e: ['w', 's', 'd', 'r'], f: ['d', 'r', 't', 'g', 'c', 'v'],
@@ -10,6 +11,7 @@ const neighbors = {
   z: ['a', 's', 'x']
 };
 
+// Keyboard-aware edit distance
 function keyboardDistance(w1, w2) {
   let cost = 0;
   for (let i = 0; i < Math.max(w1.length, w2.length); i++) {
@@ -22,6 +24,7 @@ function keyboardDistance(w1, w2) {
 
 let tokenizer, model;
 
+// Load the model once the page is ready
 document.addEventListener("DOMContentLoaded", async () => {
   const button = document.querySelector("button");
   button.disabled = true;
@@ -30,9 +33,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     tokenizer = await window.transformers.AutoTokenizer.from_pretrained('Xenova/distilbert-base-uncased');
     model = await window.transformers.AutoModelForMaskedLM.from_pretrained('Xenova/distilbert-base-uncased');
-    console.log("Model and tokenizer loaded.");
+    console.log("Model loaded successfully.");
     button.disabled = false;
-    document.getElementById("result").innerHTML = "Model ready. Type and click 'Correct'.";
+    document.getElementById("result").innerHTML = "Model ready. Type a sentence with 'goin'.";
   } catch (err) {
     console.error("Error loading model:", err);
     document.getElementById("result").innerHTML = "Error loading model.";
@@ -42,29 +45,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function correct() {
   try {
     const inputText = document.getElementById("textInput").value;
-    if (!inputText.includes("goin")) {
+    const typo = "goin";
+    const candidates = ["going", "coin", "gone", "gown", "join"];
+
+    if (!inputText.includes(typo)) {
       document.getElementById("result").innerHTML = "Please include the word 'goin' as a test typo.";
       return;
     }
 
-    const masked = inputText.replace("goin", "[MASK]");
-    console.log("Masked sentence:", masked);
+    const masked = inputText.replace(typo, "[MASK]");
+    console.log("Masked input:", masked);
 
     const output = await model(masked, { topk: 10 });
     console.log("Model output:", output);
 
-    const candidates = ["going", "coin", "gone", "gown", "join"];
-    const scores = candidates.map(w => {
-      const prob = output.find(o => o.token_str === w)?.score || 1e-9;
-      const dist = keyboardDistance("goin", w);
-      return { w, score: Math.log(prob) - dist };
+    const scores = candidates.map(word => {
+      const prob = output.find(o => o.token_str === word)?.score || 1e-9;
+      const dist = keyboardDistance(typo, word);
+      return { word, score: Math.log(prob) - dist };
     });
 
     scores.sort((a, b) => b.score - a.score);
     const best = scores[0];
-    document.getElementById("result").innerHTML = `Prediction: <strong>${best.w}</strong>`;
+
+    document.getElementById("result").innerHTML = `Prediction: <strong>${best.word}</strong>`;
   } catch (err) {
-    console.error("Error in correct():", err);
-    document.getElementById("result").innerHTML = "Something went wrong during correction.";
+    console.error("Error during correction:", err);
+    document.getElementById("result").innerHTML = "Error running correction.";
   }
 }
