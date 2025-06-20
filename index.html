@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Autocorrect with TinyBERT</title>
+</head>
+<body>
+  <h2>Autocorrect Demo</h2>
+  <p>Type a sentence with a typo, and we’ll correct it using TinyBERT + keyboard distance.</p>
+  <input type="text" id="textInput" size="60" placeholder="e.g., I am goin to the park">
+  <button onclick="correct()">Correct</button>
+  <p id="result">Prediction: <em>...</em></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
