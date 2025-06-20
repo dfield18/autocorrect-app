@@ -22,23 +22,49 @@ function keyboardDistance(w1, w2) {
 
 let tokenizer, model;
 
-(async () => {
-  tokenizer = await window.transformers.AutoTokenizer.from_pretrained('Xenova/bert-base-uncased');
-  model = await window.transformers.AutoModelForMaskedLM.from_pretrained('Xenova/bert-base-uncased');
-})();
+document.addEventListener("DOMContentLoaded", async () => {
+  const button = document.querySelector("button");
+  button.disabled = true;
+  document.getElementById("result").innerHTML = "Loading model...";
+
+  try {
+    tokenizer = await window.transformers.AutoTokenizer.from_pretrained('Xenova/bert-base-uncased');
+    model = await window.transformers.AutoModelForMaskedLM.from_pretrained('Xenova/bert-base-uncased');
+    console.log("Model and tokenizer loaded.");
+    button.disabled = false;
+    document.getElementById("result").innerHTML = "Model ready. Type and click 'Correct'.";
+  } catch (err) {
+    console.error("Error loading model:", err);
+    document.getElementById("result").innerHTML = "Error loading model.";
+  }
+});
 
 async function correct() {
-  const inputText = document.getElementById("textInput").value;
-  const masked = inputText.replace("goin", "[MASK]");
-  const output = await model(masked, { topk: 10 });
+  try {
+    const inputText = document.getElementById("textInput").value;
+    if (!inputText.includes("goin")) {
+      document.getElementById("result").innerHTML = "Please include the word 'goin' as a test typo.";
+      return;
+    }
 
-  const candidates = ["going", "coin", "gone", "gown", "join"];
-  const scores = candidates.map(w => {
-    const prob = output.find(o => o.token_str === w)?.score || 1e-9;
-    const dist = keyboardDistance("goin", w);
-    return { w, score: Math.log(prob) - dist };
-  });
+    const masked = inputText.replace("goin", "[MASK]");
+    console.log("Masked sentence:", masked);
 
-  scores.sort((a, b) => b.score - a.score);
-  document.getElementById("result").innerHTML = `Prediction: <strong>${scores[0].w}</strong>`;
+    const output = await model(masked, { topk: 10 });
+    console.log("Model output:", output);
+
+    const candidates = ["going", "coin", "gone", "gown", "join"];
+    const scores = candidates.map(w => {
+      const prob = output.find(o => o.token_str === w)?.score || 1e-9;
+      const dist = keyboardDistance("goin", w);
+      return { w, score: Math.log(prob) - dist };
+    });
+
+    scores.sort((a, b) => b.score - a.score);
+    const best = scores[0];
+    document.getElementById("result").innerHTML = `Prediction: <strong>${best.w}</strong>`;
+  } catch (err) {
+    console.error("Error in correct():", err);
+    document.getElementById("result").innerHTML = "Something went wrong during correction.";
+  }
 }
